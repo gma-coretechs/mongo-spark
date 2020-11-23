@@ -16,9 +16,8 @@
 
 package tour;
 
-import com.mongodb.ConnectionString;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.spark.MongoConnector;
 import com.mongodb.spark.MongoSpark;
@@ -143,7 +142,7 @@ public final class JavaIntroduction {
         explicitDF.printSchema();
 
         // SQL
-        explicitDF.createOrReplaceTempView("characters");
+        explicitDF.registerTempTable("characters");
         Dataset<Row> centenarians = sparkSession.sql("SELECT name, age FROM characters WHERE age >= 100");
 
         // Saving DataFrame
@@ -201,7 +200,7 @@ public final class JavaIntroduction {
     }
 
     private static void dropDatabase(final String connectionString) {
-        ConnectionString uri = new ConnectionString(connectionString);
-        MongoClients.create(uri).getDatabase(uri.getDatabase()).drop();
+        MongoClientURI uri = new MongoClientURI(connectionString);
+        new MongoClient(uri).dropDatabase(uri.getDatabase());
     }
 }

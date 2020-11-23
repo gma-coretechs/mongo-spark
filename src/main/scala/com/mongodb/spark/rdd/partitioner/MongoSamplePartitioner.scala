@@ -49,7 +49,6 @@ class MongoSamplePartitioner extends MongoPartitioner {
   private val DefaultPartitionKey = "_id"
   private val DefaultPartitionSizeMB = "64"
   private val DefaultSamplesPerPartition = "10"
-  private val DefaultNumberOfPartitions = "200"
 
   /**
    * The partition key property
@@ -67,11 +66,6 @@ class MongoSamplePartitioner extends MongoPartitioner {
   val samplesPerPartitionProperty = "samplesPerPartition".toLowerCase()
 
   /**
-   * The number of samples for each partition
-   */
-  val numberOfPartitionsProperty = "numberOfPartitions".toLowerCase()
-
-  /**
    * Calculate the Partitions
    *
    * @param connector  the MongoConnector
@@ -82,23 +76,17 @@ class MongoSamplePartitioner extends MongoPartitioner {
   override def partitions(connector: MongoConnector, readConfig: ReadConfig, pipeline: Array[BsonDocument]): Array[MongoPartition] = {
     Try(PartitionerHelper.collStats(connector, readConfig)) match {
       case Success(results) =>
-        logInfo(results.toString())
         val matchQuery = PartitionerHelper.matchQuery(pipeline)
         val partitionerOptions = readConfig.partitionerOptions.map(kv => (kv._1.toLowerCase, kv._2))
         val partitionKey = partitionerOptions.getOrElse(partitionKeyProperty, DefaultPartitionKey)
-        logInfo(s"Using partition key ${partitionKey}")
         val partitionSizeInBytes = partitionerOptions.getOrElse(partitionSizeMBProperty, DefaultPartitionSizeMB).toInt * 1024 * 1024
-        logInfo(s"Using partition size bytes ${partitionSizeInBytes}")
         val samplesPerPartition = partitionerOptions.getOrElse(samplesPerPartitionProperty, DefaultSamplesPerPartition).toInt
-        logInfo(s"Using samples per partition ${samplesPerPartition}")
-        val numberOfPartitions = partitionerOptions.getOrElse(numberOfPartitionsProperty, DefaultNumberOfPartitions).toInt
 
         val count = if (matchQuery.isEmpty) {
           results.getNumber("count").longValue()
         } else {
           connector.withCollectionDo(readConfig, { coll: MongoCollection[BsonDocument] => coll.countDocuments(matchQuery) })
         }
-        logInfo(s"Count: ${count}")
         val avgObjSizeInBytes = results.get("avgObjSize", new BsonInt64(0)).asNumber().longValue()
         logInfo(s"Average object size in bytes ${avgObjSizeInBytes}")
 

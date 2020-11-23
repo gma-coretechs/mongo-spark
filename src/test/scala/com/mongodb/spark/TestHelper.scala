@@ -17,8 +17,8 @@
 package com.mongodb.spark
 
 import com.mongodb.client.model.{UpdateOptions, Updates}
-import com.mongodb.client.{MongoClient, MongoClients, MongoCollection, MongoDatabase}
-import com.mongodb.ReadPreference
+import com.mongodb.client.{MongoCollection, MongoDatabase}
+import com.mongodb.{MongoClient, MongoClientURI, ReadPreference}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.{SparkConf, SparkContext}
 import org.bson.{BsonDocument, BsonString, Document}
@@ -32,17 +32,19 @@ object TestHelper {
   def apply(): TestHelper = new TestHelper()
 
   private var _sparkContext: Option[SparkContext] = None
+  private var customConf: Boolean = false
 
   def getOrCreateSparkContext(sparkConf: SparkConf, requiredCustomConf: Boolean): SparkContext = synchronized {
-    val createSparkContext = (requiredCustomConf || _sparkContext.isEmpty || _sparkContext.exists(_.isStopped))
-    if (createSparkContext) {
-      if (requiredCustomConf) resetSparkContext()
-      _sparkContext = Some(new SparkContext(sparkConf))
-    }
-    _sparkContext.get
+    if (customConf != requiredCustomConf) resetSparkContext()
+    customConf = requiredCustomConf
+    _sparkContext.getOrElse({
+      val sc = new SparkContext(sparkConf)
+      _sparkContext = Some(sc)
+      sc
+    })
   }
 
-  def resetSparkContext(): Unit = synchronized {
+  def resetSparkContext(): Unit = {
     _sparkContext.foreach { sc => sc.stop() }
     SparkSession.clearActiveSession()
     SparkSession.clearDefaultSession()
@@ -58,7 +60,7 @@ class TestHelper extends Logging {
 
   val mongoClientURI: String = Properties.propOrElse(MONGODB_URI_SYSTEM_PROPERTY_NAME, DEFAULT_URI)
 
-  lazy val mongoClient: MongoClient = MongoClients.create(mongoClientURI)
+  lazy val mongoClient: MongoClient = new MongoClient(new MongoClientURI(mongoClientURI))
 
   def getMongoClientURI: String = mongoClientURI
   def getMongoClient(): MongoClient = mongoClient

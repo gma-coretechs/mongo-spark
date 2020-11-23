@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package com.mongodb.spark
+package com.mongodb
 
-import java.io.Serializable
+import com.mongodb.connection.Cluster
 
-import com.mongodb.MongoClient
-
-/**
- * A factory for creating MongoClients
- *
- * '''Note:''' Care should be taken to implement an `equals` method to ensure that the `MongoClientCache` can cache and reuse the resulting
- * `MongoClient`.
- *
- * @since 1.0
- */
-trait MongoClientFactory extends Serializable {
+object Implicits {
 
   /**
-   * Creates a `MongoClient`
-   *
-   * @return the new `MongoClient`
+   * A helper to liberate the cluster information from the MongoClient
    */
-  def create(): MongoClient
+  implicit class MongoClientWrapper(val mongoClient: MongoClient) extends AnyVal {
+    def cluster: Cluster = mongoClient.getCluster
+  }
 
 }

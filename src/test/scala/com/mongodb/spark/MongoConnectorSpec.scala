@@ -16,12 +16,11 @@
 
 package com.mongodb.spark
 
-import java.util.concurrent.TimeUnit
-
-import com.mongodb.client.MongoClient
+import com.mongodb.MongoClient
 import com.mongodb.spark.config.ReadConfig
 import com.mongodb.spark.connection.DefaultMongoClientFactory
 import org.apache.spark.SparkConf
+import org.scalatest.FlatSpec
 
 class MongoConnectorSpec extends RequiresMongoDB {
 
@@ -32,7 +31,7 @@ class MongoConnectorSpec extends RequiresMongoDB {
   it should "set the correct localThreshold" in {
     val conf = sparkConf.clone().set(s"${ReadConfig.configPrefix}${ReadConfig.localThresholdProperty}", "5")
     MongoConnector(conf).withMongoClientDo({ client =>
-      client.getClusterDescription.getClusterSettings.getLocalThreshold(TimeUnit.MILLISECONDS) == 5
+      client.getMongoClientOptions.getLocalThreshold == 5
     }) shouldBe true
   }
 
