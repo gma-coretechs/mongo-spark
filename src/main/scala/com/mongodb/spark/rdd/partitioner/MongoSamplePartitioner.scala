@@ -104,6 +104,7 @@ class MongoSamplePartitioner extends MongoPartitioner {
 
         // Falls back to partitioning on count if document size is 0
         val numDocumentsPerPartition: Int = if (avgObjSizeInBytes > 0) math.floor(partitionSizeInBytes.toFloat / avgObjSizeInBytes).toInt else math.floor(count / numberOfPartitions).toInt
+        logInfo(s"Using ${numDocumentsPerPartition} documents per partition")
         val numberOfSamples = math.floor(samplesPerPartition * count / numDocumentsPerPartition.toFloat).toInt
 
         if (numDocumentsPerPartition >= count) {
