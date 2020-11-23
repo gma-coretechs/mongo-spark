@@ -49,6 +49,7 @@ class MongoSamplePartitioner extends MongoPartitioner {
   private val DefaultPartitionKey = "_id"
   private val DefaultPartitionSizeMB = "64"
   private val DefaultSamplesPerPartition = "10"
+  private val DefaultNumberOfPartitions = "200"
 
   /**
    * The partition key property
@@ -66,6 +67,11 @@ class MongoSamplePartitioner extends MongoPartitioner {
   val samplesPerPartitionProperty = "samplesPerPartition".toLowerCase()
 
   /**
+   * The number of partitions
+   */
+  val numberOfPartitionsProperty = "numberOfPartitions".toLowerCase()
+
+  /**
    * Calculate the Partitions
    *
    * @param connector  the MongoConnector
@@ -81,6 +87,7 @@ class MongoSamplePartitioner extends MongoPartitioner {
         val partitionKey = partitionerOptions.getOrElse(partitionKeyProperty, DefaultPartitionKey)
         val partitionSizeInBytes = partitionerOptions.getOrElse(partitionSizeMBProperty, DefaultPartitionSizeMB).toInt * 1024 * 1024
         val samplesPerPartition = partitionerOptions.getOrElse(samplesPerPartitionProperty, DefaultSamplesPerPartition).toInt
+        val numberOfPartitions = partitionerOptions.getOrElse(numberOfPartitionsProperty, DefaultNumberOfPartitions).toInt
 
         val count = if (matchQuery.isEmpty) {
           results.getNumber("count").longValue()
